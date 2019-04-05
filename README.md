@@ -1,0 +1,2 @@
+# pretty-code-zoom
+
