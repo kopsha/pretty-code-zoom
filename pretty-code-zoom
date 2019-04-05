@@ -1,0 +1,61 @@
+#!/usr/bin/python3
+
+import sys
+import os
+
+from wordcloud import WordCloud
+
+CAPTURE = [
+    '.h',
+    '.hpp',
+    '.cpp',
+    '.c',
+    '.m',
+    '.mm',
+    '.java',
+    '.qml',
+]
+
+code_bucket = []
+
+def scan_source(filepath):
+    #print('scanning', filepath)
+    source_text = open(filepath).read()
+
+    with open(filepath) as f:
+        text = f.read()
+        code_bucket.append(text)
+
+def inspect(path):
+    if not os.path.isdir(path):
+        print('{} is not an existing directory'.format(path))
+        return
+
+    to_scan = []
+    unhandled = set()
+
+    for dirpath, dirnames, filenames in os.walk(path):
+        for extension in CAPTURE:
+            to_scan.extend([dirpath+'/'+afile for afile in filenames if afile.endswith(extension)])
+        for f in filenames:
+            name, ext = os.path.splitext(f)
+            unhandled.add( ext )
+
+    print( 'found {} files.'.format(len(to_scan)))
+    print( 'unhandled extensions', unhandled.difference(CAPTURE) )
+
+    for filepath in to_scan:
+        scan_source(filepath)
+
+    wc = WordCloud(width=1920, height=1080).generate('\n'.join(code_bucket))
+    wc.to_file('all_in_one.png')
+
+def main(argv):
+    if argv:
+        for folder in argv:
+            inspect(folder)
+    else:
+        print('Please specify source folder.')
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
